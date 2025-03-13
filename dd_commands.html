@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Command Generator</title>
+  <style>
+    /* ===== VARIABLES ===== */
+    :root {
+      --primary-color: #3498db;
+      --primary-hover: #2980b9;
+      --secondary-color: #2ecc71;
+      --secondary-hover: #27ae60;
+      --text-color: #333;
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --input-bg: #ffffff;
+      --input-border: #e0e0e0;
+      --command-bg: #f5f7fa;
+      --command-text: #2c3e50;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --toggle-inactive: #ccc;
+      --toggle-active: var(--primary-color);
+      --toggle-ball: #fff;
+    }
+
+    [data-theme="dark"] {
+      --primary-color: #3498db;
+      --primary-hover: #2980b9;
+      --secondary-color: #2ecc71;
+      --secondary-hover: #27ae60;
+      --text-color: #f0f0f0;
+      --bg-color: #1a1a1a;
+      --card-bg: #2c2c2c;
+      --input-bg: #383838;
+      --input-border: #444444;
+      --command-bg: #383838;
+      --command-text: #e0e0e0;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      --toggle-inactive: #555;
+      --toggle-active: var(--primary-color);
+      --toggle-ball: #fff;
+    }
+
+    /* ===== BASE STYLES ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      margin-bottom: 30px;
+      border-bottom: 1px solid var(--input-border);
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+
+    /* ===== TOGGLE SWITCH COMPONENTS ===== */
+    .switch-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .toggle-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .toggle-switch {
+      display: flex;
+      align-items: center;
+    }
+
+    .toggle-label {
+      margin: 0 10px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .toggle-input {
+      height: 0;
+      width: 0;
+      visibility: hidden;
+    }
+
+    .toggle-slider {
+      width: 50px;
+      height: 24px;
+      background: var(--toggle-inactive);
+      display: block;
+      border-radius: 100px;
+      position: relative;
+      transition: 0.3s;
+    }
+
+    .toggle-slider:after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: var(--toggle-ball);
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    .toggle-input:checked + .toggle-slider {
+      background: var(--toggle-active);
+    }
+
+    .toggle-input:checked + .toggle-slider:after {
+      left: calc(100% - 3px);
+      transform: translateX(-100%);
+    }
+
+    .switch-label {
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .toggle-text {
+      min-width: 45px;
+    }
+
+    /* For mutually exclusive toggle groups */
+    .toggle-group.exclusive .toggle-input:checked + .toggle-slider {
+      background: var(--toggle-active);
+    }
+
+    /* ===== CARD COMPONENT ===== */
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: var(--shadow);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    /* ===== INPUT COMPONENTS ===== */
+    input, textarea, select {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      font-size: 16px;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      font-family: inherit;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+    }
+
+    /* ===== MODE SELECTOR ===== */
+    .mode-selector {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 25px;
+    }
+
+    .mode-label {
+      position: relative;
+      display: inline-block;
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      text-align: center;
+      font-weight: 600;
+      transition: background-color 0.3s, color 0.3s;
+      border: 1px solid var(--input-border);
+      min-width: 120px;
+    }
+
+    .mode-label:first-of-type {
+      border-radius: 6px 0 0 6px;
+    }
+
+    .mode-label:last-of-type {
+      border-radius: 0 6px 6px 0;
+    }
+
+    .mode-selector input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .mode-selector input[type="radio"]:checked + .mode-label {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+
+    /* ===== BUTTON COMPONENTS ===== */
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s, transform 0.2s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .secondary-button {
+      background-color: var(--secondary-color);
+    }
+
+    .secondary-button:hover {
+      background-color: var(--secondary-hover);
+    }
+
+    /* ===== OUTPUT SECTION ===== */
+    .output-container {
+      margin-top: 20px;
+    }
+
+    .output {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .command {
+      margin-bottom: 20px;
+      background-color: var(--command-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    
+    .command.last-copied {
+      border-color: var(--primary-color);
+    }
+
+    .command pre {
+      padding: 15px;
+      font-family: 'Fira Code', 'Courier New', Courier, monospace;
+      color: var(--command-text);
+      font-size: 14px;
+      line-height: 1.5;
+      border-bottom: 1px solid var(--input-border);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .command-actions {
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .command-button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .command-button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .copy-all-section {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .output-title {
+      margin-bottom: 20px;
+      color: var(--text-color);
+      font-weight: 600;
+      font-size: 20px;
+    }
+
+    /* ===== UTILITY CLASSES ===== */
+    .hidden {
+      display: none;
+    }
+
+    /* ===== TOAST NOTIFICATION ===== */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--secondary-color);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: auto;
+      font-size: 14px;
+      color: var(--text-color);
+      opacity: 0.8;
+    }
+
+    /* ===== RESPONSIVE STYLES ===== */
+    @media (max-width: 768px) {
+      .button-group {
+        flex-direction: column;
+      }
+      
+      .command pre {
+        font-size: 12px;
+      }
+      
+      .mode-selector {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .mode-label:first-of-type, .mode-label:last-of-type {
+        border-radius: 6px;
+      }
+      
+      .toggle-group {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Command Generator</h1>
+      <div class="switch-container">
+        <span class="toggle-text">Light</span>
+        <label class="toggle-label">
+          <input type="checkbox" id="theme-toggle" class="toggle-input">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-text">Dark</span>
+      </div>
+    </header>
+    
+    <div class="card">
+      <div class="mode-selector">
+        <input type="radio" id="grep-mode" name="command-mode" value="grep" checked>
+        <label for="grep-mode" class="mode-label">grep</label>
+        
+        <input type="radio" id="vimgrep-mode" name="command-mode" value="vimgrep">
+        <label for="vimgrep-mode" class="mode-label">vimgrep</label>
+      </div>
+      
+      <div class="form-group">
+        <label for="fields">Enter comma-separated list of fields:</label>
+        <input type="text" id="fields" placeholder="e.g., buy_broker_comm,userdefined68,userdefined21">
+      </div>
+      
+      <div class="form-group">
+        <label for="stringValue">Enter string value for MLS (e.g., 'demo' or 'cr'):</label>
+        <input type="text" id="stringValue" placeholder="e.g., vir">
+      </div>
+      
+      <div class="form-group">
+        <label class="switch-label">Environment prefix:</label>
+        <div class="toggle-group exclusive" id="env-prefix-group">
+          <div class="switch-container">
+            <span class="toggle-text">None</span>
+            <label class="toggle-label">
+              <input type="checkbox" id="env-none" class="toggle-input env-prefix-toggle" value="none" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="switch-container">
+            <span class="toggle-text">dev</span>
+            <label class="toggle-label">
+              <input type="checkbox" id="env-dev" class="toggle-input env-prefix-toggle" value="dev">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="switch-container">
+            <span class="toggle-text">beta</span>
+            <label class="toggle-label">
+              <input type="checkbox" id="env-beta" class="toggle-input env-prefix-toggle" value="beta">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group grep-only">
+        <label class="switch-label">Grep Options:</label>
+        <div class="toggle-group" id="grep-options-group">
+          <div class="switch-container">
+            <span class="toggle-text">-n</span>
+            <label class="toggle-label">
+              <input type="checkbox" id="option-n" class="toggle-input" value="n">
+              <span class="toggle-slider"></span>
+            </label>
+            <span>(Show line numbers)</span>
+          </div>
+          <div class="switch-container">
+            <span class="toggle-text">-w</span>
+            <label class="toggle-label">
+              <input type="checkbox" id="option-w" class="toggle-input" value="w">
+              <span class="toggle-slider"></span>
+            </label>
+            <span>(Match whole words)</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="basePath">Base path (optional):</label>
+        <input type="text" id="basePath" placeholder="e.g., /your/path">
+        <small style="color: var(--text-color); opacity: 0.8;">Leave empty to use home path (~/)</small>
+      </div>
+      
+      <div class="button-group">
+        <button id="generateBtn">Generate Commands</button>
+        <button id="copyAllBtn" class="secondary-button">Copy All Commands</button>
+      </div>
+      
+      <div class="form-group" style="margin-top: 20px; padding: 15px; background-color: var(--command-bg); border-radius: 8px; border-left: 4px solid var(--primary-color);">
+        <h3 style="margin-bottom: 10px; color: var(--text-color);">Don't forget to check here!</h3>
+        <ul style="margin-left: 20px; list-style-type: none;">
+          <li style="margin-bottom: 8px;">
+            <a href="https://github.fbsdata.com/programming/flexmls/blob/master/server/common/thirdparty/realist/realist.js" 
+               target="_blank" 
+               style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
+              https://github.fbsdata.com/programming/flexmls/blob/master/server/common/thirdparty/realist/realist.js
+            </a>
+            <span style="color: var(--text-color); font-style: italic;"> (if MLS uses Realist)</span>
+          </li>
+          <li>
+            <a href="https://github.fbsdata.com/programming/flexmls/blob/master/server/common/thirdparty/crs/crs.js" 
+               target="_blank" 
+               style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
+              https://github.fbsdata.com/programming/flexmls/blob/master/server/common/thirdparty/crs/crs.js
+            </a>
+            <span style="color: var(--text-color); font-style: italic;"> (if MLS uses CRS)</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <div id="output-section" class="output-container hidden">
+      <h2 class="output-title">Generated Commands</h2>
+      <div class="copy-all-section">
+        <button id="copyAllBtn2" class="secondary-button">Copy All Commands</button>
+      </div>
+      <div id="output" class="output"></div>
+    </div>
+  </div>
+  
+  <footer>
+    Command Generator | Built for command-line efficiency
+  </footer>
+  
+  <div id="toast" class="toast">Copied to clipboard!</div>
+  
+  <script>
+    /**
+     * Command Generator Application
+     * Generates command line instructions for searching and analyzing field data
+     */
+    
+    // DOM Elements cache
+    const domElements = {
+      themeToggle: document.getElementById('theme-toggle'),
+      envPrefixToggles: document.querySelectorAll('.env-prefix-toggle'),
+      grepOptionsGroup: document.getElementById('grep-options-group'),
+      fieldsInput: document.getElementById('fields'),
+      stringValueInput: document.getElementById('stringValue'),
+      basePathInput: document.getElementById('basePath'),
+      generateBtn: document.getElementById('generateBtn'),
+      copyAllBtn: document.getElementById('copyAllBtn'),
+      copyAllBtn2: document.getElementById('copyAllBtn2'),
+      outputSection: document.getElementById('output-section'),
+      outputDiv: document.getElementById('output'),
+      toast: document.getElementById('toast')
+    };
+    
+    /**
+     * Theme Manager - Handles dark/light mode preferences
+     */
+    const themeManager = {
+      init() {
+        // Check for saved theme preference or use preferred color scheme
+        const savedTheme = localStorage.getItem('theme') || 
+          (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        
+        // Apply the saved theme
+        if (savedTheme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          domElements.themeToggle.checked = true;
+        }
+        
+        // Theme toggle event listener
+        domElements.themeToggle.addEventListener('change', this.toggleTheme);
+      },
+      
+      toggleTheme(event) {
+        if (this.checked) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          localStorage.setItem('theme', 'light');
+        }
+      }
+    };
+    
+    /**
+     * Toggle Group Manager - Handles mutually exclusive toggle groups
+     */
+    const toggleGroupManager = {
+      init() {
+        // Set up environment prefix toggles (mutually exclusive)
+        domElements.envPrefixToggles.forEach(toggle => {
+          toggle.addEventListener('change', this.handleExclusiveToggle);
+        });
+        
+        // Ensure one toggle is active by default
+        if (!Array.from(domElements.envPrefixToggles).some(t => t.checked)) {
+          document.getElementById('env-none').checked = true;
+        }
+      },
+      
+      handleExclusiveToggle(event) {
+        const toggles = document.querySelectorAll('.env-prefix-toggle');
+        
+        // Uncheck all other toggles in the group
+        toggles.forEach(toggle => {
+          if (toggle !== event.target) {
+            toggle.checked = false;
+          }
+        });
+        
+        // Prevent unchecking the last active toggle
+        if (!Array.from(toggles).some(t => t.checked)) {
+          event.target.checked = true;
+        }
+        
+        // If output is already visible, regenerate
+        if (!domElements.outputSection.classList.contains('hidden')) {
+          domElements.generateBtn.click();
+        }
+      }
+    };
+    
+    /**
+     * Command Generator - Core functionality for generating commands
+     */
+    const commandGenerator = {
+      init() {
+        // Set up event listeners
+        domElements.generateBtn.addEventListener('click', this.generateCommands);
+        domElements.copyAllBtn.addEventListener('click', this.copyAllCommands);
+        domElements.copyAllBtn2.addEventListener('click', this.copyAllCommands);
+        
+        // Set up mode selector and grep options visibility
+        const commandModeRadios = document.querySelectorAll('input[name="command-mode"]');
+        commandModeRadios.forEach(radio => {
+          radio.addEventListener('change', () => {
+            this.updateGrepOptionsVisibility();
+            
+            // If output is already visible, regenerate
+            if (!domElements.outputSection.classList.contains('hidden')) {
+              domElements.generateBtn.click();
+            }
+          });
+        });
+        
+        // Set up grep options
+        const grepOptionToggles = domElements.grepOptionsGroup.querySelectorAll('input[type="checkbox"]');
+        grepOptionToggles.forEach(checkbox => {
+          checkbox.addEventListener('change', () => {
+            // If output is already visible, regenerate
+            if (!domElements.outputSection.classList.contains('hidden')) {
+              domElements.generateBtn.click();
+            }
+          });
+        });
+        
+        // Initialize grep options visibility
+        this.updateGrepOptionsVisibility();
+      },
+      
+      /**
+       * Updates the visibility of grep options based on selected mode
+       */
+      updateGrepOptionsVisibility() {
+        const mode = this.getSelectedMode();
+        const grepOptionsSection = document.querySelector('.grep-only');
+        
+        grepOptionsSection.style.display = mode === 'grep' ? 'block' : 'none';
+      },
+      
+      /**
+       * Gets the currently selected command mode (grep or vimgrep)
+       * @returns {string} The selected mode
+       */
+      getSelectedMode() {
+        return document.querySelector('input[name="command-mode"]:checked').value;
+      },
+      
+      /**
+       * Gets the selected environment prefix
+       * @returns {string} The selected environment prefix
+       */
+      getSelectedEnvPrefix() {
+        const activeToggle = Array.from(domElements.envPrefixToggles).find(toggle => toggle.checked);
+        return activeToggle ? activeToggle.value : 'none';
+      },
+      
+      /**
+       * Gets selected grep options
+       * @returns {Object} Object with grep options
+       */
+      getGrepOptions() {
+        const options = {};
+        const checkboxes = domElements.grepOptionsGroup.querySelectorAll('input[type="checkbox"]');
+        
+        checkboxes.forEach(checkbox => {
+          options[checkbox.value] = checkbox.checked;
+        });
+        
+        return options;
+      },
+      
+      /**
+       * Generates commands based on user inputs
+       */
+      generateCommands() {
+        const fields = domElements.fieldsInput.value.trim();
+        const stringValue = domElements.stringValueInput.value.trim();
+        const basePath = domElements.basePathInput.value.trim();
+        const mode = commandGenerator.getSelectedMode();
+        const envPrefix = commandGenerator.getSelectedEnvPrefix();
+        const grepOptions = commandGenerator.getGrepOptions();
+        
+        if (!fields) {
+          alert('Please enter comma-separated field values.');
+          return;
+        }
+        
+        if (!stringValue) {
+          alert('Please enter a string value.');
+          return;
+        }
+        
+        const result = commandGenerator.buildCommands(fields, stringValue, basePath, mode, envPrefix, grepOptions);
+        
+        // Generate and display the output
+        commandGenerator.displayOutput(result);
+      },
+      
+      /**
+       * Builds command strings based on user inputs
+       * @param {string} fieldsList - Comma-separated list of fields
+       * @param {string} stringValue - MLS string value
+       * @param {string} basePath - Optional base path
+       * @param {string} mode - grep or vimgrep
+       * @param {string} envPrefix - Environment prefix (none, dev, beta)
+       * @param {Object} grepOptions - grep command options
+       * @returns {Object} Object containing commands and fieldsCode
+       */
+      buildCommands(fieldsList, stringValue, basePath = '', mode = 'grep', envPrefix = 'none', grepOptions = {}) {
+        // Parse the comma-separated list of fields
+        const fields = fieldsList.split(',').map(field => field.trim());
+        
+        // Define the relative paths
+        const relativePaths = [
+          'private/html/brokerload/edit/customevents.js*',
+          'private/html/brokerload/edit/customevents/XXX.js*',
+          'private/html/brokerload/edit/customevents/json/XXX.json*',
+          'private/html/brokerload/edit/customsave_end/XXX.html*',
+          'private/html/brokerload/edit/customsave.html*',
+          'private/html/brokerload/edit/listingmaintenance.js*',
+          'private/html/brokerload/changestatus/customevents/XXX.js*',
+          'private/html/brokerload/changestatus/customevents/json/XXX.json*',
+          'private/html/brokerload/changestatus/step3.html*',
+          'private/html/brokerload/changestatus/finishfooter.html*',
+          'private/html/brokerload/changestatus/step3a.html*',
+          'private/html/brokerload/changestatus/step3ainner.html*'
+        ];
+        
+        // Create the field pattern
+        const fieldPattern = fields.join('\\|');
+        
+        // Prepare the base path
+        let pathPrefix = basePath ? 
+          (basePath.endsWith('/') ? basePath : basePath + '/') : 
+          '~/';
+        
+        // Add environment prefix if selected
+        if (envPrefix !== 'none') {
+          // If base path was provided and doesn't start with ~, add the env prefix after the base path
+          if (basePath && !basePath.startsWith('~')) {
+            pathPrefix = basePath.endsWith('/') ? 
+              `${basePath}${envPrefix}/` : 
+              `${basePath}/${envPrefix}/`;
+          } 
+          // Otherwise insert it after the ~/ or at the beginning
+          else {
+            if (pathPrefix.startsWith('~/')) {
+              pathPrefix = `~/${envPrefix}/`;
+            } else {
+              pathPrefix = `./${envPrefix}/`;
+            }
+          }
+        }
+        
+        let commands = [];
+        
+        if (mode === 'grep') {
+          // Build grep options string
+          let optionsStr = '';
+          if (grepOptions.n) optionsStr += 'n';
+          if (grepOptions.w) optionsStr += 'w';
+          
+          // Only add the dash if we have options
+          optionsStr = optionsStr ? `-${optionsStr} ` : '';
+          
+          // Build grep command templates with selected options
+          const grepTemplates = relativePaths.map(path => 
+            `git grep ${optionsStr}--break --heading "\\(${fieldPattern}\\)" ${pathPrefix}${path}`
+          );
+          
+          // Generate each command by replacing placeholders
+          commands = grepTemplates.map(template => template.replace(/XXX/g, stringValue));
+        } else if (mode === 'vimgrep') {
+          // Build vimgrep command templates
+          const vimgrepTemplates = relativePaths.map(path => 
+            `:vimgrep /\\<\\(${fieldPattern}\\)\\>/gj ${pathPrefix}${path}`
+          );
+          
+          // Generate each command by replacing placeholders
+          commands = vimgrepTemplates.map(template => template.replace(/XXX/g, stringValue));
+        }
+        
+        // Generate the JavaScript fields array code (same for both modes)
+        const jsFieldsCode = 
+        `//List of fields we want to check:
+var fields = ['${fields.join("', '")}'];
+println("Checking for possible complications...");
+fields.forEach(function(f) {
+  var sql = ["select pref_name, pref_value"
+            ,  "from prefs"
+            , "where tech_id="+xId(flexML.ma_tech_id)
+            ,   "and pref_value like '%"+f.quote('db')+"%'"
+            ].join(' ');
+  var rs = MLS.Select(sql);
+  while (rs.Fetch()) {
+    println("Possible complication: "+rs.Row.pref_name+":"+rs.Row.pref_value);
+  }
+});
+println("Done.");`;
+        
+        // Return both the commands and the fields code
+        return {
+          commands: commands,
+          fieldsCode: jsFieldsCode
+        };
+      },
+      
+      /**
+       * Displays the generated output to the user
+       * @param {Object} result - Object containing commands and fieldsCode
+       */
+      displayOutput(result) {
+        // Create HTML content for the output
+        let outputContent = '';
+        
+        // Add each command with a copy button
+        result.commands.forEach((command, index) => {
+          outputContent += `<div class="command" id="command-${index}">
+            <pre class="command-text" contenteditable="false">${command}</pre>
+            <div class="command-actions">
+              <div>
+                <button class="edit-button command-button" data-command="${index}">Edit Command</button>
+                <button class="save-button command-button" data-command="${index}" style="display:none">Save Changes</button>
+              </div>
+              <div>
+                <button class="copy-button command-button" data-command="${index}">Copy Command</button>
+              </div>
+            </div>
+          </div>`;
+        });
+        
+        // Add the JavaScript fields code with a header
+        outputContent += `<div class="command">
+          <div style="padding: 15px; background-color: var(--bg-color); border-bottom: 1px solid var(--input-border);">
+            <h3 style="margin-bottom: 10px; color: var(--text-color);">Run this from David's beta tools</h3>
+            <p style="color: var(--text-color);">Located at: <strong>https://****&lt;YourUserName&gt;****.beta.flexmls.com/cgi-bin/mainmenu.cgi?cmd=srv+devtools.html</strong></p>
+            <p style="color: var(--text-color); margin-top: 5px;">Run as the MLS user (fields should match the list you entered):</p>
+          </div>
+          <pre class="command-text" contenteditable="false">${result.fieldsCode}</pre>
+          <div class="command-actions">
+            <div>
+              <button class="edit-button command-button" data-command="js">Edit Code</button>
+              <button class="save-button command-button" data-command="js" style="display:none">Save Changes</button>
+            </div>
+            <div>
+              <button class="copy-button command-button" data-command="js">Copy JS Code</button>
+            </div>
+          </div>
+        </div>`;
+        
+        // Add the all prefs code with a header
+        const prefsCode = `var sql = ["select pref_name, pref_value"
+ , "from prefs"
+ , "where tech_id="+xId(flexML.ma_tech_id)
+ ].join(' ');
+var rs = MLS.Select(sql);
+while (rs.Fetch()) {
+  println("Preference: "+rs.Row.pref_name+":"+rs.Row.pref_value);
+}
+println("Done.");`;
+
+        outputContent += `<div class="command">
+          <div style="padding: 15px; background-color: var(--bg-color); border-bottom: 1px solid var(--input-border);">
+            <h3 style="margin-bottom: 10px; color: var(--text-color);">All Prefs</h3>
+            <p style="color: var(--text-color); margin-top: 5px;">You can also return all of the prefs and Ctrl-f to search for your fields. It's not a bad idea to know which prefs are set for an MLS.</p>
+          </div>
+          <pre class="command-text" contenteditable="false">${prefsCode}</pre>
+          <div class="command-actions">
+            <div>
+              <button class="edit-button command-button" data-command="prefs">Edit Code</button>
+              <button class="save-button command-button" data-command="prefs" style="display:none">Save Changes</button>
+            </div>
+            <div>
+              <button class="copy-button command-button" data-command="prefs">Copy Prefs Code</button>
+            </div>
+          </div>
+        </div>`;
+        
+        // Update the output div and show it
+        domElements.outputDiv.innerHTML = outputContent;
+        domElements.outputSection.classList.remove('hidden');
+        
+        // Scroll to the output section
+        domElements.outputSection.scrollIntoView({ behavior: 'smooth' });
+        
+        // Set up the command edit/copy buttons
+        this.setupCommandButtons();
+      },
+      
+      /**
+       * Sets up event listeners for the command buttons (edit, save, copy)
+       */
+      setupCommandButtons() {
+        // Add event listeners for copy buttons
+        const copyButtons = document.querySelectorAll('.copy-button[data-command]');
+        copyButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const commandIndex = this.getAttribute('data-command');
+            const commandContainer = this.closest('.command');
+            const commandTextElement = commandContainer.querySelector('pre.command-text');
+            const textToCopy = commandTextElement.textContent;
+            
+            clipboardManager.copyToClipboard(textToCopy, commandContainer);
+          });
+        });
+        
+        // Add event listeners for edit buttons
+        const editButtons = document.querySelectorAll('.edit-button[data-command]');
+        editButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const commandContainer = this.closest('.command');
+            const preElement = commandContainer.querySelector('pre.command-text');
+            
+            // Make the pre element editable
+            preElement.contentEditable = true;
+            preElement.classList.add('editable');
+            preElement.focus();
+            
+            // Show save button, hide edit button
+            commandContainer.classList.add('edit-mode');
+            this.style.display = 'none';
+            commandContainer.querySelector('.save-button').style.display = 'inline-block';
+          });
+        });
+        
+        // Add event listeners for save buttons
+        const saveButtons = document.querySelectorAll('.save-button[data-command]');
+        saveButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const commandContainer = this.closest('.command');
+            const preElement = commandContainer.querySelector('pre.command-text');
+            
+            // Make the pre element non-editable again
+            preElement.contentEditable = false;
+            preElement.classList.remove('editable');
+            
+            // Hide save button, show edit button
+            commandContainer.classList.remove('edit-mode');
+            this.style.display = 'none';
+            commandContainer.querySelector('.edit-button').style.display = 'inline-block';
+            
+            // Show a confirmation toast
+            clipboardManager.showToast('Command updated!');
+          });
+        });
+      },
+      
+      /**
+       * Copies all generated commands to the clipboard
+       */
+      copyAllCommands() {
+        const fields = domElements.fieldsInput.value.trim();
+        const stringValue = domElements.stringValueInput.value.trim();
+        
+        if (!fields || !stringValue) {
+          alert('Please enter both field values and string value before copying.');
+          return;
+        }
+        
+        const basePath = domElements.basePathInput.value.trim();
+        const mode = commandGenerator.getSelectedMode();
+        const envPrefix = commandGenerator.getSelectedEnvPrefix();
+        const grepOptions = commandGenerator.getGrepOptions();
+        
+        const result = commandGenerator.buildCommands(fields, stringValue, basePath, mode, envPrefix, grepOptions);
+        const allCommands = [...result.commands, '', result.fieldsCode].join('\n\n');
+        
+        // Get the "Copy All" button that was clicked
+        const clickedButton = this.closest('.copy-all-section') ? this : domElements.copyAllBtn;
+        
+        // Copy all commands to clipboard
+        clipboardManager.copyToClipboard(allCommands);
+        
+        // Show additional visual feedback for the "Copy All" action
+        clickedButton.style.backgroundColor = '#4aae9b'; // Slightly different color for feedback
+        setTimeout(() => {
+          clickedButton.style.backgroundColor = ''; 
+        }, 1000);
+      }
+    };
+    
+    /**
+     * Clipboard Manager - Handles clipboard operations
+     */
+    const clipboardManager = {
+      /**
+       * Shows a toast notification
+       * @param {string} message - Message to display
+       */
+      showToast(message) {
+        const toast = domElements.toast;
+        toast.textContent = message;
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 2000);
+      },
+      
+      /**
+       * Copies text to clipboard
+       * @param {string} text - Text to copy
+       * @param {Element} commandElement - Element to highlight (optional)
+       * @returns {Promise<boolean>} Success status
+       */
+      copyToClipboard(text, commandElement = null) {
+        // First, remove the highlight from any previously highlighted command
+        document.querySelectorAll('.command.last-copied').forEach(el => {
+          el.classList.remove('last-copied');
+        });
+        
+        // Add highlight to the current command if provided
+        if (commandElement) {
+          commandElement.classList.add('last-copied');
+        }
+        
+        return navigator.clipboard.writeText(text)
+          .then(() => {
+            this.showToast('Copied to clipboard!');
+            return true;
+          })
+          .catch(err => {
+            console.error('Failed to copy: ', err);
+            this.showToast('Failed to copy!');
+            return false;
+          });
+      }
+    };
+    
+    /**
+     * Initialize the application
+     */
+    function initApp() {
+      themeManager.init();
+      toggleGroupManager.init();
+      commandGenerator.init();
+    }
+    
+    // Start the application when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
